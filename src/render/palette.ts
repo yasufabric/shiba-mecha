@@ -1,0 +1,18 @@
+export const PALETTE = {
+  night: 0x070b16,
+  fog: 0x0b1222,
+  snow: 0xd5e0ee,
+  slush: 0x8ea0b6,
+  ground: 0x121722,
+  building: 0x161b2b,
+  roof: 0xe7eef6,
+  pink: 0xff3b8d,
+  cyan: 0x3ef2ff,
+  brown: 0x8d4e28,
+  brownDark: 0x5c3218,
+  cream: 0xf4e4c6,
+  creamDeep: 0xe0c396,
+  metal: 0x2b3242,
+  enemy: 0x171c2c,
+  nose: 0x2a211c,
+} as const;

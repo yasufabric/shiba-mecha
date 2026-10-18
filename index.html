@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#070b16" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070b16'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff3b8d'/%3E%3C/svg%3E" />
+    <title>しばメカ・スノーネオン</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="view"></canvas>
+      <div id="hud">
+        <div id="score">0</div>
+        <div id="combo"></div>
+      </div>
+      <svg id="cracks" data-hits="0" viewBox="0 0 390 844" preserveAspectRatio="none" aria-hidden="true">
+        <g class="c1">
+          <path d="M-4 120 L48 150 L30 210 L92 248 L70 320" />
+          <path d="M48 150 L110 132" />
+          <path d="M394 640 L340 610 L360 540 L300 500" />
+        </g>
+        <g class="c2">
+          <path d="M-6 430 L54 400 L40 470 L120 510 L96 590 L150 640" />
+          <path d="M54 400 L20 360" />
+          <path d="M396 180 L330 210 L348 270 L280 300 L300 360" />
+          <path d="M330 210 L370 160" />
+        </g>
+        <g class="c3">
+          <path d="M200 -8 L214 70 L180 120 L230 190 L190 250" />
+          <path d="M214 70 L270 90" />
+          <path d="M-8 760 L70 730 L60 680 L130 650" />
+          <path d="M398 420 L320 450 L340 520 L260 560" />
+        </g>
+      </svg>
+      <div id="flash"></div>
+      <div id="reticle" hidden></div>
+      <div id="stick" hidden>
+        <div id="stick-knob"></div>
+      </div>
+      <div id="touch"></div>
+      <div id="end" hidden>
+        <div id="end-score" class="end-score">0</div>
+        <div class="end-label">スコア</div>
+        <div id="end-combo" class="end-combo">0</div>
+        <div class="end-label">最大コンボ</div>
+        <div id="end-best" class="end-best">0</div>
+        <div class="end-label">ベスト</div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
