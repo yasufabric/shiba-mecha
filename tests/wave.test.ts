@@ -34,6 +34,18 @@ describe("wave", () => {
     expect(wave.enemies.every((enemy) => enemy.kind === "grunt")).toBe(true);
   });
 
+  it("starts the pack when the opening enemies are already gone", () => {
+    let wave = createWave();
+    while (wave.phase === "landing") wave = tickWave(wave, 0.05).state;
+    expect(wave.phase).toBe("intro");
+    wave = {
+      ...wave,
+      enemies: wave.enemies.map((enemy) => ({ ...enemy, alive: false, hp: 0 })),
+    };
+    for (let i = 0; i < 20 && wave.phase === "intro"; i += 1) wave = tickWave(wave, 0.05).state;
+    expect(wave.phase).toBe("pack");
+  });
+
   it("sends one large foe after the pack, flashes, then starts the next pack", () => {
     let wave = createWave();
     for (let i = 0; i < 80 && wave.phase !== "pack"; i += 1) wave = tickWave(wave, 0.05).state;

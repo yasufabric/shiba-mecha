@@ -130,6 +130,33 @@ body {
   margin-top: -1px;
 }
 
+#stick-guide {
+  position: absolute;
+  width: 108px;
+  height: 108px;
+  margin: -54px 0 0 -54px;
+  border: 2px solid rgba(62, 242, 255, 0.32);
+  border-radius: 50%;
+  background: rgba(7, 12, 24, 0.14);
+  pointer-events: none;
+}
+
+#stick-guide[hidden] {
+  display: none !important;
+}
+
+#stick-guide::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: rgba(244, 228, 198, 0.32);
+}
+
 #stick {
   position: absolute;
   width: 120px;

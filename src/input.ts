@@ -76,6 +76,13 @@ export function deriveAim(pointer: PointerSample | null, width: number, height: 
   };
 }
 
+export function openingGuide(width: number, height: number): { x: number; y: number } {
+  return {
+    x: clamp(width * 0.2, 72, 110),
+    y: clamp(height - 150, height * 0.62, Math.max(height * 0.62, height - 72)),
+  };
+}
+
 export function pointerSide(x: number, width: number): "left" | "right" {
   return x < width * 0.5 ? "left" : "right";
 }
