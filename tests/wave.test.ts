@@ -7,7 +7,7 @@ import {
   INTRO_SHOT_TIMES,
   LANDING_TIME,
   mechAltitude,
-  PACK_SIZE,
+  EARLY_PACK_SIZE,
   tickWave,
 } from "../src/game/wave";
 
@@ -30,7 +30,7 @@ describe("wave", () => {
     expect(landed).toBe(true);
     expect(shots).toBe(INTRO_SHOT_TIMES.length);
     expect(wave.phase).toBe("pack");
-    expect(wave.enemies.filter((enemy) => enemy.alive)).toHaveLength(PACK_SIZE);
+    expect(wave.enemies.filter((enemy) => enemy.alive)).toHaveLength(EARLY_PACK_SIZE);
     expect(wave.enemies.every((enemy) => enemy.kind === "grunt")).toBe(true);
   });
 
@@ -67,7 +67,7 @@ describe("wave", () => {
     const next = tickWave(flashed.state, FLASH_TIME);
     expect(next.state.phase).toBe("pack");
     expect(next.state.waveIndex).toBe(1);
-    expect(next.state.enemies.filter((enemy) => enemy.alive)).toHaveLength(PACK_SIZE);
+    expect(next.state.enemies.filter((enemy) => enemy.alive)).toHaveLength(EARLY_PACK_SIZE);
     expect(next.state.enemies.length).toBeLessThanOrEqual(MAX_ENEMIES);
   });
 });

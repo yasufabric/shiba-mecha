@@ -10,6 +10,7 @@ export interface Enemy {
   hp: number;
   alive: boolean;
   radius: number;
+  pace: number;
 }
 
 export function assertNever(value: never, label: string): never {

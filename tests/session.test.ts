@@ -51,7 +51,7 @@ describe("session", () => {
     }
     const scales = events.filter((event) => event.type === "shot").map((event) => event.scale);
     expect(Math.max(...scales)).toBeGreaterThan(1);
-    expect(session.combo.max).toBeGreaterThanOrEqual(6);
+    expect(session.combo.max).toBeGreaterThanOrEqual(4);
     expect(session.score).toBeGreaterThan(1000);
     expect(events.some((event) => event.type === "flash")).toBe(true);
     expect(session.wave.phase).toBe("pack");

@@ -129,7 +129,7 @@ export function moveEnemies(
     const dz = playerZ - enemy.z;
     const distance = Math.hypot(dx, dz);
     if (distance < 0.0001) return enemy;
-    const step = Math.min(distance, speedOf(enemy.kind) * dt);
+    const step = Math.min(distance, speedOf(enemy.kind) * enemy.pace * dt);
     return {
       ...enemy,
       x: enemy.x + (dx / distance) * step,

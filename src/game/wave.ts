@@ -6,7 +6,19 @@ export const LANDING_TIME = 0.9;
 export const INTRO_SHOT_TIMES = [0.2, 0.62, 1.04] as const;
 export const INTRO_BEAT = 0.4;
 export const FLASH_TIME = 0.34;
+export const EARLY_WAVE_COUNT = 2;
+export const EARLY_PACK_SIZE = 3;
+export const EARLY_PACE = 0.42;
 export const PACK_SIZE = 6;
+
+export function wavePackSize(waveIndex: number): number {
+  return waveIndex < EARLY_WAVE_COUNT ? EARLY_PACK_SIZE : PACK_SIZE;
+}
+
+export function wavePace(waveIndex: number): number {
+  return waveIndex < EARLY_WAVE_COUNT ? EARLY_PACE : 1;
+}
+
 export const LANDING_DROP = 6.2;
 
 export type WaveEvent =
@@ -25,7 +37,7 @@ export interface WaveState {
 }
 
 export function createWave(): WaveState {
-  const enemies = [-1.7, 0, 1.7].map((x, index) => makeEnemy(index, "grunt", x, 5.5));
+  const enemies = [-1.7, 0, 1.7].map((x, index) => makeEnemy(index, "grunt", x, 5.5, 1));
   return {
     phase: "landing",
     phaseTime: 0,
@@ -157,7 +169,13 @@ export function tickWave(state: WaveState, dt: number): { state: WaveState; even
     }
     case "pack": {
       if (!wave.enemies.some((enemy) => enemy.alive)) {
-        const large = makeEnemy(wave.nextId, "large", wave.waveIndex % 2 === 0 ? -0.35 : 0.35, 9.4);
+        const large = makeEnemy(
+          wave.nextId,
+          "large",
+          wave.waveIndex % 2 === 0 ? -0.35 : 0.35,
+          9.4,
+          wavePace(wave.waveIndex),
+        );
         wave = {
           ...wave,
           phase: "large",
@@ -191,14 +209,16 @@ export function tickWave(state: WaveState, dt: number): { state: WaveState; even
 }
 
 function beginPack(wave: WaveState, waveIndex: number): WaveState {
-  const count = allowedSpawns(0, PACK_SIZE);
+  const count = allowedSpawns(0, wavePackSize(waveIndex));
+  const pace = wavePace(waveIndex);
+  const early = waveIndex < EARLY_WAVE_COUNT;
   const enemies: Enemy[] = [];
   for (let index = 0; index < count; index += 1) {
     const col = index % 3;
     const row = Math.floor(index / 3);
-    const x = -2.2 + col * 2.2 + (waveIndex % 2) * 0.4;
-    const z = 8.6 + row * 1.7;
-    enemies.push(makeEnemy(wave.nextId + index, "grunt", x, z));
+    const x = early ? -1.2 + index * 1.2 : -2.2 + col * 2.2 + (waveIndex % 2) * 0.4;
+    const z = early ? 9.2 : 8.6 + row * 1.7;
+    enemies.push(makeEnemy(wave.nextId + index, "grunt", x, z, pace));
   }
   return {
     ...wave,
@@ -210,6 +230,6 @@ function beginPack(wave: WaveState, waveIndex: number): WaveState {
   };
 }
 
-function makeEnemy(id: number, kind: EnemyKind, x: number, z: number): Enemy {
-  return { id, kind, x, z, hp: maxHp(kind), alive: true, radius: radiusOf(kind) };
+function makeEnemy(id: number, kind: EnemyKind, x: number, z: number, pace: number): Enemy {
+  return { id, kind, x, z, hp: maxHp(kind), alive: true, radius: radiusOf(kind), pace };
 }
