@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AIM_RADIUS } from "../src/game/combat";
+import { AIM_RADIUS, aimReach } from "../src/game/combat";
 import { createSession, retrySession, tickSession, type FrameInput, type GameEvent, type Session } from "../src/game/session";
 
 const idle: FrameInput = {
@@ -8,6 +8,7 @@ const idle: FrameInput = {
   aiming: false,
   reticleX: 200,
   reticleY: 400,
+  aimReach: AIM_RADIUS,
   screens: [],
 };
 
@@ -68,9 +69,10 @@ describe("session", () => {
         aiming: true,
         reticleX: 0,
         reticleY: 0,
+        aimReach: aimReach(390, 844),
         screens: session.wave.enemies.map((enemy) => ({
           id: enemy.id,
-          x: AIM_RADIUS + 40,
+          x: aimReach(390, 844) + 80,
           y: 0,
           alive: enemy.alive,
         })),

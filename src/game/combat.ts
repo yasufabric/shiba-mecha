@@ -87,6 +87,23 @@ export function pickTarget(
   return bestId;
 }
 
+export function aimReach(width: number, height: number): number {
+  const span = Math.min(Math.max(1, width), Math.max(1, height));
+  return Math.max(AIM_RADIUS * 2, span * 0.42);
+}
+
+export function lockAim(
+  reticleX: number,
+  reticleY: number,
+  points: readonly ScreenPoint[],
+  reach: number,
+): { x: number; y: number; targetId: number | null } {
+  const targetId = pickTarget(reticleX, reticleY, points, reach);
+  const point = targetId === null ? undefined : points.find((item) => item.id === targetId && item.alive);
+  if (!point) return { x: reticleX, y: reticleY, targetId: null };
+  return { x: point.x, y: point.y, targetId: point.id };
+}
+
 export function movePlayer(
   x: number,
   z: number,

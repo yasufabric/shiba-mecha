@@ -1,11 +1,10 @@
 import { registerKill, shotScale, tickCombo, type ComboState, createCombo } from "./combo";
 import {
-  AIM_RADIUS,
   FIRE_INTERVAL,
+  lockAim,
   moveEnemies,
   movePlayer,
   overlapsPlayer,
-  pickTarget,
   pushOut,
   SHOT_DAMAGE,
   type ScreenPoint,
@@ -22,7 +21,13 @@ export interface FrameInput {
   aiming: boolean;
   reticleX: number;
   reticleY: number;
+  aimReach: number;
   screens: readonly ScreenPoint[];
+}
+
+export interface AimPoint {
+  x: number;
+  y: number;
 }
 
 export type GameEvent =
@@ -68,9 +73,10 @@ export function tickSession(
   session: Session,
   input: FrameInput,
   dt: number,
-): { session: Session; events: GameEvent[] } {
+): { session: Session; events: GameEvent[]; aim: AimPoint } {
   const step = clamp(dt, 0, 0.05);
-  if (session.over || step === 0) return { session, events: [] };
+  const rawAim = { x: input.reticleX, y: input.reticleY };
+  if (session.over || step === 0) return { session, events: [], aim: rawAim };
 
   const events: GameEvent[] = [];
   let combo = tickCombo(session.combo, step);
@@ -116,6 +122,7 @@ export function tickSession(
 
   let playerX = session.playerX;
   let playerZ = session.playerZ;
+  let aim = rawAim;
 
   if (isCombatPhase(wave.phase)) {
     const moved = movePlayer(playerX, playerZ, input.moveX, input.moveZ, step);
@@ -123,9 +130,12 @@ export function tickSession(
     playerZ = moved.z;
     let enemies = moveEnemies(wave.enemies, playerX, playerZ, step);
 
-    if (input.aiming && cooldown <= 0) {
-      const targetId = pickTarget(input.reticleX, input.reticleY, input.screens, AIM_RADIUS);
-      const target = targetId === null ? undefined : enemies.find((enemy) => enemy.id === targetId && enemy.alive);
+    if (input.aiming) {
+      const locked = lockAim(input.reticleX, input.reticleY, input.screens, input.aimReach);
+      aim = { x: locked.x, y: locked.y };
+      const target = locked.targetId === null || cooldown > 0
+        ? undefined
+        : enemies.find((enemy) => enemy.id === locked.targetId && enemy.alive);
       if (target) {
         cooldown = FIRE_INTERVAL;
         const scale = shotScale(combo.count);
@@ -187,6 +197,7 @@ export function tickSession(
           over: true,
         },
         events,
+        aim,
       };
     }
   }
@@ -194,6 +205,7 @@ export function tickSession(
   return {
     session: { playerX, playerZ, hull, wave, combo, score, best, cooldown, over: false },
     events,
+    aim,
   };
 }
 

@@ -1,7 +1,7 @@
 import "./style.css";
 import * as THREE from "three";
 import { Sfx } from "./audio";
-import { enemyHover } from "./game/combat";
+import { aimReach, enemyHover } from "./game/combat";
 import { readBest, writeBest } from "./game/score";
 import { createSession, retrySession, tickSession, type GameEvent } from "./game/session";
 import { assertNever } from "./game/types";
@@ -92,6 +92,7 @@ function frame(now: number): void {
     aiming: combat && pointer.aim.active,
     reticleX: pointer.aim.reticleX,
     reticleY: pointer.aim.reticleY,
+    aimReach: aimReach(width, height),
     screens,
   }, dt);
   session = stepped.session;
@@ -119,7 +120,7 @@ function frame(now: number): void {
   view.camera.updateMatrixWorld(true);
   view.scene.updateMatrixWorld(true);
   screens = foes.project(view.camera, width, height);
-  paintHud(pointer.stick, pointer.aim, combat);
+  paintHud(pointer.stick, pointer.aim.active, stepped.aim, combat);
   view.composer.render();
   requestAnimationFrame(frame);
 }
@@ -186,7 +187,8 @@ function followCamera(dt: number, altitude: number): void {
 
 function paintHud(
   stickFrame: ReturnType<Pointers["frame"]>["stick"],
-  aimFrame: ReturnType<Pointers["frame"]>["aim"],
+  aiming: boolean,
+  aimPoint: { x: number; y: number },
   combat: boolean,
 ): void {
   scoreNode.textContent = String(session.score);
@@ -202,11 +204,11 @@ function paintHud(
     stickKnob.style.left = `${60 + (stickFrame.knobX - stickFrame.originX)}px`;
     stickKnob.style.top = `${60 + (stickFrame.knobY - stickFrame.originY)}px`;
   }
-  const showAim = aimFrame.active && combat && !session.over;
+  const showAim = aiming && combat && !session.over;
   reticle.hidden = !showAim;
   if (showAim) {
-    reticle.style.left = `${aimFrame.reticleX}px`;
-    reticle.style.top = `${aimFrame.reticleY}px`;
+    reticle.style.left = `${aimPoint.x}px`;
+    reticle.style.top = `${aimPoint.y}px`;
     const thickness = 64 + Math.min(28, session.combo.count * 3);
     reticle.style.width = `${thickness}px`;
     reticle.style.height = `${thickness}px`;
