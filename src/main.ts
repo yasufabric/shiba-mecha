@@ -5,8 +5,8 @@ import { aimReach, enemyHover } from "./game/combat";
 import { readBest, writeBest } from "./game/score";
 import { createSession, retrySession, tickSession, type GameEvent } from "./game/session";
 import { assertNever } from "./game/types";
-import { mechAltitude } from "./game/wave";
-import { Pointers } from "./input";
+import { handsOn, mechAltitude, scriptedReticle } from "./game/wave";
+import { openingGuide, Pointers } from "./input";
 import { Foes } from "./render/foes";
 import { Effects } from "./render/fx";
 import { createMech } from "./render/mech";
@@ -23,6 +23,7 @@ const flashNode = must("#flash");
 const stick = must("#stick");
 const stickKnob = must("#stick-knob");
 const reticle = must("#reticle");
+const stickGuide = must("#stick-guide");
 const end = must("#end");
 const endScore = must("#end-score");
 const endCombo = must("#end-combo");
@@ -85,11 +86,11 @@ function frame(now: number): void {
   const width = app.clientWidth || window.innerWidth;
   const height = app.clientHeight || window.innerHeight;
   const pointer = pointers.frame(width, height);
-  const combat = session.wave.phase === "pack" || session.wave.phase === "large";
+  const control = handsOn(session.wave.phase);
   const stepped = tickSession(session, {
-    moveX: combat ? pointer.stick.moveX : 0,
-    moveZ: combat ? pointer.stick.moveZ : 0,
-    aiming: combat && pointer.aim.active,
+    moveX: control ? pointer.stick.moveX : 0,
+    moveZ: control ? pointer.stick.moveZ : 0,
+    aiming: control && pointer.aim.active,
     reticleX: pointer.aim.reticleX,
     reticleY: pointer.aim.reticleY,
     aimReach: aimReach(width, height),
@@ -120,7 +121,10 @@ function frame(now: number): void {
   view.camera.updateMatrixWorld(true);
   view.scene.updateMatrixWorld(true);
   screens = foes.project(view.camera, width, height);
-  paintHud(pointer.stick, pointer.aim.active, stepped.aim, combat);
+  const scripted = scriptedReticle(session.wave.phase, session.wave.enemies, screens);
+  const playerAim = handsOn(session.wave.phase) && pointer.aim.active;
+  const aimPoint = playerAim ? stepped.aim : scripted ?? stepped.aim;
+  paintHud(pointer.stick, playerAim || scripted !== null, aimPoint, width, height);
   view.composer.render();
   requestAnimationFrame(frame);
 }
@@ -187,9 +191,10 @@ function followCamera(dt: number, altitude: number): void {
 
 function paintHud(
   stickFrame: ReturnType<Pointers["frame"]>["stick"],
-  aiming: boolean,
+  showAim: boolean,
   aimPoint: { x: number; y: number },
-  combat: boolean,
+  width: number,
+  height: number,
 ): void {
   scoreNode.textContent = String(session.score);
   comboNode.textContent = session.combo.count > 0 ? `×${session.combo.count}` : "";
@@ -204,8 +209,15 @@ function paintHud(
     stickKnob.style.left = `${60 + (stickFrame.knobX - stickFrame.originX)}px`;
     stickKnob.style.top = `${60 + (stickFrame.knobY - stickFrame.originY)}px`;
   }
-  const showAim = aiming && combat && !session.over;
-  reticle.hidden = !showAim;
+  const opening = session.wave.phase === "landing" || session.wave.phase === "intro";
+  const showGuide = opening && !showStick && !session.over;
+  stickGuide.hidden = !showGuide;
+  if (showGuide) {
+    const spot = openingGuide(width, height);
+    stickGuide.style.left = `${spot.x}px`;
+    stickGuide.style.top = `${spot.y}px`;
+  }
+  reticle.hidden = !showAim || session.over;
   if (showAim) {
     reticle.style.left = `${aimPoint.x}px`;
     reticle.style.top = `${aimPoint.y}px`;

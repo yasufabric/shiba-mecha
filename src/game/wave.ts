@@ -1,4 +1,4 @@
-import { allowedSpawns, maxHp, radiusOf } from "./combat";
+import { allowedSpawns, maxHp, radiusOf, type ScreenPoint } from "./combat";
 import { clamp } from "./math";
 import { assertNever, type Enemy, type EnemyKind, type PhaseName } from "./types";
 
@@ -49,6 +49,46 @@ export function isCombatPhase(phase: PhaseName): boolean {
     default:
       assertNever(phase, "phase");
   }
+}
+
+export function handsOn(phase: PhaseName): boolean {
+  switch (phase) {
+    case "intro":
+    case "pack":
+    case "large":
+      return true;
+    case "landing":
+    case "flash":
+    case "gameover":
+      return false;
+    default:
+      assertNever(phase, "phase");
+  }
+}
+
+export function scriptedReticle(
+  phase: PhaseName,
+  enemies: readonly Enemy[],
+  screens: readonly ScreenPoint[],
+): { x: number; y: number; enemyId: number } | null {
+  switch (phase) {
+    case "landing":
+    case "intro":
+      break;
+    case "pack":
+    case "large":
+    case "flash":
+    case "gameover":
+      return null;
+    default:
+      return assertNever(phase, "phase");
+  }
+  for (const enemy of enemies) {
+    if (!enemy.alive) continue;
+    const point = screens.find((item) => item.id === enemy.id && item.alive);
+    if (point) return { x: point.x, y: point.y, enemyId: enemy.id };
+  }
+  return null;
 }
 
 export function mechAltitude(phase: PhaseName, phaseTime: number): number {
@@ -109,9 +149,10 @@ export function tickWave(state: WaveState, dt: number): { state: WaveState; even
         });
       }
       const lastShot = INTRO_SHOT_TIMES[INTRO_SHOT_TIMES.length - 1] ?? 0;
-      if (wave.introShots >= INTRO_SHOT_TIMES.length && wave.phaseTime >= lastShot + INTRO_BEAT) {
-        wave = beginPack(wave, wave.waveIndex);
-      }
+      const openingAlive = wave.enemies.some((enemy) => enemy.alive);
+      const scriptFinished = wave.introShots >= INTRO_SHOT_TIMES.length && wave.phaseTime >= lastShot + INTRO_BEAT;
+      const clearedEarly = !openingAlive && wave.introShots < INTRO_SHOT_TIMES.length && wave.phaseTime >= INTRO_BEAT;
+      if (scriptFinished || clearedEarly) wave = beginPack(wave, wave.waveIndex);
       break;
     }
     case "pack": {

@@ -13,7 +13,7 @@ import { createHull, MAX_HITS, takeHit, tickHull, type Hull } from "./damage";
 import { clamp } from "./math";
 import { pointsFor, promoteBest } from "./score";
 import { assertNever, type Enemy, type EnemyKind } from "./types";
-import { createWave, isCombatPhase, tickWave, type WaveState } from "./wave";
+import { createWave, handsOn, isCombatPhase, scriptedReticle, tickWave, type WaveState } from "./wave";
 
 export interface FrameInput {
   moveX: number;
@@ -123,12 +123,15 @@ export function tickSession(
   let playerX = session.playerX;
   let playerZ = session.playerZ;
   let aim = rawAim;
+  const scripted = scriptedReticle(wave.phase, wave.enemies, input.screens);
+  if (!input.aiming && scripted) aim = { x: scripted.x, y: scripted.y };
 
-  if (isCombatPhase(wave.phase)) {
+  if (handsOn(wave.phase)) {
+    const hunting = isCombatPhase(wave.phase);
     const moved = movePlayer(playerX, playerZ, input.moveX, input.moveZ, step);
     playerX = moved.x;
     playerZ = moved.z;
-    let enemies = moveEnemies(wave.enemies, playerX, playerZ, step);
+    let enemies = hunting ? moveEnemies(wave.enemies, playerX, playerZ, step) : wave.enemies;
 
     if (input.aiming) {
       const locked = lockAim(input.reticleX, input.reticleY, input.screens, input.aimReach);
@@ -166,39 +169,42 @@ export function tickSession(
       }
     }
 
-    const contact = resolveContact(enemies, playerX, playerZ, hull);
-    enemies = contact.enemies;
-    hull = contact.hull;
-    if (contact.crashed) {
-      events.push({
-        type: "crash",
-        enemyId: contact.crashed.id,
-        kind: contact.crashed.kind,
-        x: contact.crashed.x,
-        z: contact.crashed.z,
-      });
-    }
-    if (contact.applied) events.push({ type: "hit", hits: hull.hits });
-    wave = { ...wave, enemies };
-
-    if (contact.over) {
-      best = promoteBest(best, score);
-      events.push({ type: "gameover", score, maxCombo: combo.max, best });
-      return {
-        session: {
-          playerX,
-          playerZ,
-          hull,
-          wave: { ...wave, phase: "gameover", phaseTime: 0 },
-          combo,
-          score,
-          best,
-          cooldown,
-          over: true,
-        },
-        events,
-        aim,
-      };
+    if (hunting) {
+      const contact = resolveContact(enemies, playerX, playerZ, hull);
+      enemies = contact.enemies;
+      hull = contact.hull;
+      if (contact.crashed) {
+        events.push({
+          type: "crash",
+          enemyId: contact.crashed.id,
+          kind: contact.crashed.kind,
+          x: contact.crashed.x,
+          z: contact.crashed.z,
+        });
+      }
+      if (contact.applied) events.push({ type: "hit", hits: hull.hits });
+      wave = { ...wave, enemies };
+      if (contact.over) {
+        best = promoteBest(best, score);
+        events.push({ type: "gameover", score, maxCombo: combo.max, best });
+        return {
+          session: {
+            playerX,
+            playerZ,
+            hull,
+            wave: { ...wave, phase: "gameover", phaseTime: 0 },
+            combo,
+            score,
+            best,
+            cooldown,
+            over: true,
+          },
+          events,
+          aim,
+        };
+      }
+    } else {
+      wave = { ...wave, enemies };
     }
   }
 
